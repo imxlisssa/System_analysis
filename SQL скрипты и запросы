@@ -1,0 +1,74 @@
+1. SQL-скрипты для создания таблиц
+
+-- Таблица пользователей
+
+CREATE TABLE users(
+	id BIGINT AUTO_INCREMENT,
+	first_name VARCHAR(20) NOT NULL,
+	last_name VARCHAR(20) NOT NULL,
+	phone VARCHAR(12) NOT NULL,
+	email VARCHAR(100) NOT NULL,
+	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+	last_session TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+	is_admin BOOLEAN DEFAULT FALSE,
+	PRIMARY KEY (id)
+);
+
+-- Таблица билетов
+
+CREATE TABLE tickets(
+	id BIGINT AUTO_INCREMENT,
+	category_id BIGINT NOT NULL,
+	visit_date DATE NOT NULL,
+	visit_time TIME NOT NULL,
+	status ENUM ('active', 'used', 'cancelled') DEFAULT 'active',
+	schedule_id BIGINT NOT NULL,
+	qr_code VARCHAR(255) UNIQUE NOT NULL,
+	order_id BIGINT
+	PRIMARY KEY(id),
+	FOREIGN KEY(category_id) REFERENCES ticket_categories(id),
+	FOREIGN KEY(schedule_id) REFERENCES schedule(id),
+	FOREIGN KEY(order_id) REFERENCES orders(id)
+);
+
+-- Таблица заказов
+
+CREATE TABLE orders(
+	id BIGINT AUTO_INCREMENT,
+	user_id BIGINT NOT NULL,
+	payment_id BIGINT NOT NULL,
+	status ENUM ('pending', 'paid', 'cancelled', 'refunded') DEFAULT 'pending',
+	PRIMARY KEY(id),
+	FOREING KEY(user_id) REFERENCES users(id),
+	FOREIGN KEY(payment_id) REFERENCES payments(id)
+);
+
+2. SQL-запросы
+
+-- Добавление нового билета
+
+START TRANSACTION
+INSERT INTO tickets (id, category_id, visit_date, visit_time, status, schedule_id, qr_code)
+VALUES (52599, 2, 2025-10-25, 15:00:00, 'active', 6218522, UUID()?)
+COMMIT;
+
+-- Найти всех пользователей, которые зарегистрировались за последние 7 дней
+
+SELECT *
+FROM users
+WHERE created_at >= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)
+	AND created_at < CURRENT_DATE() + INTERVAL 1 DAY
+ORDER BY created_at DESC;
+
+-- Найти сколько всего билетов купил пользователь
+
+SELECT 
+	u.id,
+	u.fist_name,
+	u.last_name,
+	COUNT(t.id) total_tickets
+FROM users u
+LEFT JOIN orders o ON u.id=o.user_id
+LEFT JOIN tickets t ON o.id=t.order_id
+WHERE o.status = 'paid'
+GROUP BY u.id, u.first_name, u.last_name;
