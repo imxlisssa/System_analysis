@@ -7,4 +7,4 @@
 |[Спецификация API 1](https://docs.google.com/document/d/1h3fH7zlUqXWNhRFDKlX9_z3jb7YvIqH389LTnYKfMtc/edit?tab=t.0)|Спецификация API текстовая с иллюстрированием sequance-диаграммой|Google Docs, PlantUML|
 |[Спецификация API 2](https://github.com/imxlisssa/System_analysis/blob/main/Спецификация%20API.yaml)| Спецификация API в формате OpenAPI|Swagger|
 |[ERD-модель](https://drawsql.app/teams/jtzhfofxvq/diagrams/erd)|Проектирование ERD-модели для системы покупки электронных билетов|drawSQL|
-|[SQL-скрипты и запросы]()| Примеры написания SQL-скриптов для создания таблиц и примеры SQL-запросов|MySQL|
+|[SQL-скрипты и запросы](https://github.com/imxlisssa/System_analysis/blob/main/SQL%20скрипты%20и%20запросы)| Примеры написания SQL-скриптов для создания таблиц и примеры SQL-запросов|MySQL|
