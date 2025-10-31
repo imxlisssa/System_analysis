@@ -1,0 +1,194 @@
+openapi: 3.0.4
+info:
+  title: ZooTicket Payments API
+  description: API для интеграции с платежной системой
+  contact:
+    name: ZooTicket Development Team
+    email: dev@zooticket.ru
+  version: 1.0.0
+servers:
+- url: /
+tags:
+- name: Payments
+  description: Операции с платежами
+paths:
+  /payments:
+    post:
+      tags:
+      - Payments
+      summary: Инициирование платёжной сессии
+      description: Создает сессию оплаты и возвращает ссылку для перенаправления на страницу платежного шлюза
+      operationId: initPayment
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PaymentRequest"
+            example:
+              order_id: ZT-5678
+              amount: 1000.0
+              currency: RUB
+              description: "Билеты в зоопарк, 1 взрослый, 1 детский"
+              success_url: https://zooticket.ru/order/success
+              fail_url: https://zooticket.ru/order/fail
+              customer:
+                id: user_123
+                fullname: Иванов Иван Иванович
+                phone: "+79999999999"
+                email: example@email.com
+                card_number: 1234 1234 1234 1234
+                validity_period: 01/2099
+                cvv: "123"
+        required: true
+      responses:
+        "200":
+          description: Платежная сессия успешно создана
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentResponse"
+              example:
+                payment_id: pay_12345
+                confirmation_url: https://payment.gateway/pay/12345
+                status: succeeded
+        "400":
+          description: Некорректный ввод данных
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error:
+                  code: invalid_amount
+                  message: Сумма оплаты должна быть больше нуля
+                  details:
+                    field: amount
+                    value: 0
+        "502":
+          description: Платежный шлюз недоступен
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error:
+                  code: gateway_unavailable
+                  message: Платежный сервис временно недоступен
+                  retry_after: 300
+components:
+  schemas:
+    PaymentRequest:
+      required:
+      - amount
+      - currency
+      - fail_url
+      - order_id
+      - success_url
+      type: object
+      properties:
+        order_id:
+          type: string
+          description: Идентификатор заказа
+          example: ZT-5678
+        amount:
+          minimum: 0.01
+          type: number
+          description: Сумма к оплате
+          format: float
+          example: 1000
+        currency:
+          type: string
+          description: Валюта оплаты
+          example: RUB
+          default: RUB
+        description:
+          type: string
+          description: Описание платежа
+          example: "Билеты в зоопарк, 1 взрослый, 1 детский"
+        success_url:
+          type: string
+          description: URL для перенаправления после успешной оплаты
+          format: uri
+          example: https://zooticket.ru/order/success
+        fail_url:
+          type: string
+          description: URL для перенаправления после неуспешной оплаты
+          format: uri
+          example: https://zooticket.ru/order/fail
+        customer:
+          $ref: "#/components/schemas/PaymentRequest_customer"
+    PaymentResponse:
+      type: object
+      properties:
+        payment_id:
+          type: string
+          description: Идентификатор платежа в системе шлюза
+          example: pay_12345
+        confirmation_url:
+          type: string
+          description: URL для перенаправления на страницу оплаты
+          format: uri
+          example: https://payment.gateway/pay/12345
+        status:
+          type: string
+          description: Статус платежной сессии
+          example: succeeded
+          enum:
+          - pending
+          - succeeded
+          - canceled
+          - failed
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          $ref: "#/components/schemas/ErrorResponse_error"
+    PaymentRequest_customer:
+      type: object
+      properties:
+        fullname:
+          type: string
+          description: Ф.И.О. пользователя
+          example: Иванов Иван Иванович
+        email:
+          type: string
+          description: Электронная почта пользователя
+          format: email
+          example: example@mail.com
+        phone:
+          type: string
+          description: Номер телефона пользователя
+          example: "+79999999999"
+        card_number:
+          type: string
+          description: Номер банковской карты пользователя
+          example: 1234 1234 1234 1234
+        validity_period:
+          type: string
+          description: Срок действия
+          example: 01/2099
+        cvv:
+          type: integer
+          description: Защитный код
+          format: int64
+          example: 123
+    ErrorResponse_error:
+      type: object
+      properties:
+        code:
+          type: string
+          description: Код ошибки
+          example: invalid_amount
+        message:
+          type: string
+          description: Сообщение об ошибке
+          example: Сумма оплаты должна быть больше нуля
+        details:
+          type: object
+          description: Дополнительные детали ошибки
+          nullable: true
+        retry_after:
+          type: integer
+          description: Время через которое можно повторить запрос (в секундах)
+          nullable: true
+          example: 300
